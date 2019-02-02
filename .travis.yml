@@ -15,7 +15,8 @@ install:
   - curl -o packer.zip $packer_url
   - unzip packer.zip
   - echo "Terraform begin"
-  - terraform_url=$(curl https://releases.hashicorp.com/index.json | jq '{terraform}' | egrep "linux.*amd64" | sort --version-sort -r | head -1 | awk -F[\"] '{print $4}')
+#  - terraform_url=$(curl https://releases.hashicorp.com/index.json | jq '{terraform}' | egrep "linux.*amd64" | sort --version-sort -r | head -1 | awk -F[\"] '{print $4}')
+  - terraform_url=https://releases.hashicorp.com/terraform/0.11.5/terraform_0.11.5_linux_amd64.zip
   - cd
   - mkdir terraform && cd $_
   - curl -o terraform.zip $terraform_url
