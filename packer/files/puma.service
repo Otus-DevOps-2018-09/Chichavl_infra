@@ -1,0 +1,14 @@
+# https://github.com/puma/puma/blob/master/docs/systemd.md
+[Unit]
+Description=Reddit Monolith App
+After=network.target
+
+[Service]
+User=appuser
+WorkingDirectory=/home/appuser/reddit
+ExecStart=/usr/local/bin/puma
+TimeoutSec=15
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

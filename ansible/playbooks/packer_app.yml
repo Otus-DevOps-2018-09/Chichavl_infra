@@ -1,0 +1,14 @@
+---
+- name: Install app requirements
+  hosts: all
+  become: yes
+  tasks:
+  - name: Install ruby
+    apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - ruby-full
+      - ruby-bundler
+      - build-essential
+

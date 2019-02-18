@@ -1,0 +1,43 @@
+dist: trusty
+sudo: required
+language: bash
+before_install:
+  - curl https://raw.githubusercontent.com/express42/otus-homeworks/2018-02/run.sh |  bash
+  - echo "Ansible begin"
+  - sudo apt-get update 
+  - sudo apt-get install -y python2.7 python-pip
+  - sudo pip2 install ansible==2.5.3 ansible-lint==3.4.21
+install:
+  - echo "Packer begin"
+  -  packer_url=$(curl https://releases.hashicorp.com/index.json | jq '{packer}' | egrep "linux.*amd64" | sort --version-sort -r | head -1 | awk -F[\"] '{print $4}')
+  - cd
+  - mkdir packer && cd $_
+  - curl -o packer.zip $packer_url
+  - unzip packer.zip
+  - echo "Terraform begin"
+#  - terraform_url=$(curl https://releases.hashicorp.com/index.json | jq '{terraform}' | egrep "linux.*amd64" | sort --version-sort -r | head -1 | awk -F[\"] '{print $4}')
+  - terraform_url=https://releases.hashicorp.com/terraform/0.11.5/terraform_0.11.5_linux_amd64.zip
+  - cd
+  - mkdir terraform && cd $_
+  - curl -o terraform.zip $terraform_url
+  - unzip terraform.zip
+  - echo "tflint begin"
+  - tflint_url=https://github.com/wata727/tflint/releases/download/v0.6.0/tflint_linux_amd64.zip
+  - cd
+  - mkdir tflint && cd $_
+  - wget $tflint_url
+  - unzip tflint_linux_amd64.zip
+  - echo "Adding packer, terraform and tflint to PATH"
+  - echo '# Terraform & Packer Paths.' >>~/.bashrc
+  - echo 'export PATH=~/terraform/:~/packer/:~/tflint/:$PATH' >>~/.bashrc
+  - source ~/.bashrc
+  - echo "Stubbing ssh keys"
+  - touch ~/.ssh/appuser.pub
+script:
+  - cd ~/build/Otus-DevOps-2018-09/Chichavl_infra/ && find . -type f -name "*.json" -exec packer validate -var-file=packer/variables.json.example {} \;
+  - cd ~/build/Otus-DevOps-2018-09/Chichavl_infra/terraform/stage/ && terraform init && terraform validate -var-file=terraform.tfvars.example . && tflint --error-with-issues --var-file=terraform.tfvars.example
+  - cd ~/build/Otus-DevOps-2018-09/Chichavl_infra/terraform/prod/ && terraform init && terraform validate -var-file=terraform.tfvars.example . && tflint --error-with-issues --var-file=terraform.tfvars.example
+  - find ~/build/Otus-DevOps-2018-09/Chichavl_infra/ansible/playbooks -type f -name "*.yml" -exec ansible-lint {} \; 
+notifications:
+  slack:
+    secure: V7KNp2xc56ywpFXMmPdGeoNga9yAZFIqzQCbf3kg+RzVkE2FaMxhxAo62i20SbSN+i3Dh668rB3BAGWjKR0mpb9FEG5WIL88mollk2hGqG/AfDZAtg9wBt0TLRKSx1Mwd4fpzTx+mCAdCJ3iO1hQtlbyGH4HcJipoaa+HL3TTu9vOLPTI2kdEaDHs6HPoQZLx/tC2zdQAMQzlWhuo5+8bPmKJSXMvKY3ewUI5xCfZYaDFtnPARe2MJ95M0nQuriX7BacCciNF7eF/3MxP/iF3YHws0KFwrk+A5EoUG32R7JwadT1FatC3iwpuUONRZ1f1IE3Q1I6epjhz05F6/JIip6UidSzewMjr5l5zHChrxkg0zav3KBm6GQC5gEVWf1FkBgL0D/BP7YU5+9ar01dOD6RTLf6YXcJWo4A/hXWjpCp793LlOEZM8io+3BFMh5fCkPsmTmkosY2SOua//0js/C3eu4/qVvZgk9JYMdlRBUKxUrKmMpdGCf8cBtU5WIOzna33Cavr2c84N4EpPuQnRxICrb1msB9KjMNZ1rLoSFffi0I06a9uVxR/fEGfaosIY/6t+XRymtN/F2xT92BcS9fz/9VFgelgFYQ/lzDg66lGssLkLEeXW6Zpz77+4NCqQE36X6aD4GfVp7HKDBaLS0iWyef3Hk7vVb4oE6HORM=
